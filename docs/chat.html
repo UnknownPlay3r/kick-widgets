@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kick Chat Widget</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+            overflow-y: auto;
+            background-color: transparent;
+        }
+        #chat-container {
+            height: 100vh;
+            overflow-y: auto;
+        }
+        .chat-message {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-radius: 4px;
+            word-wrap: break-word;
+        }
+        .username {
+            font-weight: bold;
+        }
+        .message {
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container"></div>
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const channelName = urlParams.get('username') || 'birchy76';
+        const fontSize = urlParams.get('fontSize') || '20';
+        const fontColor = '#' + (urlParams.get('fontColor') || 'FFFFFF');
+        const bgColor = '#' + (urlParams.get('bgColor') || '000000');
+        const bgOpacity = urlParams.get('bgOpacity') || '0.5';
+
+        // Apply styles
+        document.body.style.fontSize = fontSize + 'px';
+        document.body.style.color = fontColor;
+        document.body.style.backgroundColor = bgColor + Math.round(bgOpacity * 255).toString(16);
+
+        // Connect to Kick chat
+        async function connectToChat() {
+            try {
+                const response = await fetch(`https://kick.com/api/v2/channels/${channelName}/messages`);
+                const data = await response.json();
+                
+                const chatContainer = document.getElementById('chat-container');
+                
+                // Display messages
+                data.messages.forEach(message => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'chat-message';
+                    messageDiv.innerHTML = `
+                        <span class="username" style="color: ${message.sender.color || '#FFFFFF'}">${message.sender.username}:</span>
+                        <span class="message">${message.content}</span>
+                    `;
+                    chatContainer.appendChild(messageDiv);
+                });
+
+                // Auto-scroll to bottom
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            } catch (error) {
+                console.error('Error fetching chat:', error);
+            }
+        }
+
+        // Initial connection
+        connectToChat();
+
+        // Refresh chat every few seconds
+        setInterval(connectToChat, 2000);
+    </script>
+</body>
+</html> 
